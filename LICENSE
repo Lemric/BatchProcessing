@@ -1,0 +1,136 @@
+Lemric Software License Agreement (Dual License)
+Version 1.0
+
+Copyright (c) 2026 Lemric
+
+----------------------------------------------------------------
+1. OVERVIEW
+----------------------------------------------------------------
+
+This software (the "Software") is provided under a dual licensing model:
+
+1. Open Source License (free of charge, subject to conditions)
+2. Commercial License (paid, required for all other uses)
+
+You may choose which license applies to your use, provided you meet all applicable conditions.
+
+----------------------------------------------------------------
+2. OPEN SOURCE LICENSE (FREE USE)
+----------------------------------------------------------------
+
+You are granted a worldwide, non-exclusive, royalty-free license to use,
+copy, modify, and distribute the Software, provided that ALL of the following conditions are met:
+
+2.1 Your project is distributed as Open Source Software
+
+2.2 Your project is licensed under a license approved by the Open Source Initiative (OSI)
+
+2.3 The complete corresponding source code of your project is publicly available
+
+2.4 You do not impose restrictions that would prevent others from accessing,
+modifying, or redistributing your project
+
+2.5 You do not charge licensing fees for the Software itself
+(charging for services, hosting, or support is allowed)
+
+If ALL of the above conditions are satisfied, you may use the Software free of charge.
+
+----------------------------------------------------------------
+3. COMMERCIAL LICENSE (REQUIRED)
+----------------------------------------------------------------
+
+If your use of the Software does NOT meet ALL conditions of Section 2,
+you MUST obtain a Commercial License from Lemric.
+
+This includes, but is not limited to:
+
+- Use in proprietary or closed-source software
+- Use in commercial products or services
+- Use in SaaS, cloud, or hosted environments
+- Use in internal business systems
+- Any use where source code is not publicly available
+
+Commercial licenses are granted under separate agreements and may include:
+
+- Rights to use the Software in proprietary environments
+- Rights to distribute without open sourcing your code
+- Additional warranties, support, or SLAs (if agreed separately)
+
+To obtain a commercial license, contact:
+
+licensing@lemric.com
+
+----------------------------------------------------------------
+4. RESTRICTIONS
+----------------------------------------------------------------
+
+You may NOT:
+
+- Use the Software in violation of this Agreement
+- Circumvent the licensing model
+- Misrepresent the origin of the Software
+- Remove or alter copyright or license notices
+
+----------------------------------------------------------------
+5. OWNERSHIP
+----------------------------------------------------------------
+
+The Software is licensed, not sold.
+
+All rights, title, and interest in the Software remain the exclusive property of Lemric.
+
+----------------------------------------------------------------
+6. TERMINATION
+----------------------------------------------------------------
+
+This license is automatically terminated if you fail to comply with its terms.
+
+Upon termination, you must immediately stop using the Software and remove all copies.
+
+----------------------------------------------------------------
+7. DISCLAIMER OF WARRANTY
+----------------------------------------------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
+
+- MERCHANTABILITY
+- FITNESS FOR A PARTICULAR PURPOSE
+- NON-INFRINGEMENT
+
+----------------------------------------------------------------
+8. LIMITATION OF LIABILITY
+----------------------------------------------------------------
+
+IN NO EVENT SHALL LEMRIC BE LIABLE FOR ANY DAMAGES,
+INCLUDING BUT NOT LIMITED TO:
+
+- LOSS OF DATA
+- LOSS OF PROFITS
+- BUSINESS INTERRUPTION
+
+ARISING FROM THE USE OR INABILITY TO USE THE SOFTWARE.
+
+----------------------------------------------------------------
+9. DEFINITIONS
+----------------------------------------------------------------
+
+"Open Source Software" means software whose source code is publicly available
+and licensed under an OSI-approved license.
+
+"Commercial Use" means any use intended for business advantage or monetary compensation,
+including internal business use.
+
+"SaaS" means Software as a Service or any hosted service where the Software is used
+to provide functionality to third parties.
+
+----------------------------------------------------------------
+10. GOVERNING LAW
+----------------------------------------------------------------
+
+This Agreement shall be governed by the laws applicable in the jurisdiction
+where Lemric operates, unless otherwise agreed in writing.
+
+----------------------------------------------------------------
+END OF TERMS
+----------------------------------------------------------------
