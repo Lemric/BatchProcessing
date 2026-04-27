@@ -6,20 +6,6 @@ file.
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Changed
-
-- Static facade environment API now returns a typed `BatchEnvironment` object:
-  - `BatchProcessing::inMemoryEnvironment()`
-  - `BatchProcessing::pdoEnvironment(\PDO $pdo, string $tablePrefix = 'batch_')`
-  - `BatchProcessing::asyncEnvironment(callable $dispatcher, ?JobRepositoryInterface, ?TransactionManagerInterface)`
-- Added `BatchProcessing::environment(?callable $configure = null)` and
-  `BatchProcessing::builder()` as canonical programmatic entry points.
-- Added `BatchEnvironment::toBuilder()` to support safe reconfiguration from an
-  existing environment.
-- `BatchEnvironmentBuilder` now supports factory-based customization for every
-  dependency (`with*Factory()` methods), while keeping fluent direct overrides.
 
 ## [1.0.0] – 2026-04-27
 
@@ -41,6 +27,26 @@ PSR-14, PSR-16).
   - `BatchProcessing::job(string $name, JobRepositoryInterface)` and
     `BatchProcessing::step(string $name, JobRepositoryInterface,
     ?TransactionManagerInterface)` shortcuts.
+- Typed environment API returning a `BatchEnvironment` object:
+  - `BatchProcessing::inMemoryEnvironment()`.
+  - `BatchProcessing::pdoEnvironment(\PDO $pdo, string $tablePrefix = 'batch_')`.
+  - `BatchProcessing::asyncEnvironment(callable $dispatcher, ?JobRepositoryInterface,
+    ?TransactionManagerInterface)`.
+  - `BatchProcessing::environment(?callable $configure = null)` and
+    `BatchProcessing::builder()` as canonical programmatic entry points.
+
+#### Environment & Builder
+
+- `BatchEnvironment` — immutable, typed container exposing the configured
+  `JobRepositoryInterface`, `TransactionManagerInterface`, `JobLauncherInterface`,
+  `JobExplorerInterface`, `JobOperatorInterface`, `JobRegistryInterface`,
+  PSR-3 logger and PSR-14 event dispatcher.
+- `BatchEnvironment::toBuilder()` enables safe reconfiguration from an existing
+  environment.
+- `BatchEnvironmentBuilder` — fluent builder with factory-based customization for
+  every dependency (`with*Factory()` methods) alongside direct overrides
+  (`withJobRepository()`, `withTransactionManager()`, `withJobLauncher()`,
+  `withEventDispatcher()`, `withLogger()`, …) and `build(): BatchEnvironment`.
 
 #### Domain Model (`Lemric\BatchProcessing\Domain`)
 
@@ -439,6 +445,5 @@ PSR-14, PSR-16).
 - **Major (x.0.0)** — Breaking changes; preceded by at least one minor
   release marking the affected APIs `@deprecated`.
 
-[Unreleased]: https://github.com/Lemric/BatchProcessing/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/Lemric/BatchProcessing/releases/tag/v1.0.0
 
