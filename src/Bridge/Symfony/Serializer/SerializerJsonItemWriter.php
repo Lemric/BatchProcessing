@@ -106,6 +106,9 @@ final class SerializerJsonItemWriter implements ItemWriterInterface, ItemStreamI
         if (is_resource($this->destination)) {
             return $this->destination;
         }
+        if (null === $this->allowedBaseDirectory || '' === mb_trim($this->allowedBaseDirectory)) {
+            throw new RuntimeException('Could not open JSON destination: allowedBaseDirectory must be configured for filesystem destinations.');
+        }
         $path = $this->destination instanceof SplFileInfo
             ? (string) $this->destination->getPathname()
             : (is_string($this->destination) ? $this->destination : throw new InvalidArgumentException('Unsupported destination type.'));

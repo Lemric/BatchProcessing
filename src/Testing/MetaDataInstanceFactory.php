@@ -44,7 +44,7 @@ final class MetaDataInstanceFactory
      */
     public static function createJobInstance(string $jobName = 'testJob', ?int $id = null): JobInstance
     {
-        return new JobInstance($id ?? ++self::$sequence, $jobName, md5($jobName));
+        return new JobInstance($id ?? ++self::$sequence, $jobName, hash('sha3-256', $jobName));
     }
 
     /**
