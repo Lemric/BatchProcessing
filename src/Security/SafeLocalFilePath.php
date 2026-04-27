@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Lemric\BatchProcessing\Security;
 
 use Lemric\BatchProcessing\Exception\NonTransientResourceException;
-
 use const DIRECTORY_SEPARATOR;
 
 /**
@@ -74,6 +73,49 @@ final class SafeLocalFilePath
                 throw new NonTransientResourceException('File path escapes the allowed base directory.');
             }
         }
+    }
+
+    /**
+     * Resolves and validates a writable destination path under the provided base directory.
+     * Returns a canonical absolute path safe for filesystem write operations.
+     *
+     * @throws NonTransientResourceException
+     */
+    public static function resolveWritablePathUnderBaseDirectory(string $path, string $allowedBaseDirectory): string
+    {
+        if ('' === $path) {
+            throw new NonTransientResourceException('File path must not be empty.');
+        }
+        self::rejectStreamWrappers($path);
+
+        $baseReal = realpath($allowedBaseDirectory);
+        if (false === $baseReal || !is_dir($baseReal)) {
+            throw new NonTransientResourceException('Allowed base directory does not exist or is not a directory.');
+        }
+
+        $normalizedPath = str_replace('\\', '/', $path);
+        $isAbsolute = str_starts_with($normalizedPath, '/')
+            || (bool) preg_match('/^[A-Za-z]:[\\/]/', $path);
+        $candidate = $isAbsolute ? $path : $baseReal.DIRECTORY_SEPARATOR.$path;
+
+        $candidateDir = dirname($candidate);
+        $candidateDirReal = realpath($candidateDir);
+        if (false === $candidateDirReal || !is_dir($candidateDirReal) || !is_writable($candidateDirReal)) {
+            throw new NonTransientResourceException("Target directory is not writable: {$candidateDir}");
+        }
+
+        $baseWithSep = mb_rtrim($baseReal, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        $dirWithSep = mb_rtrim($candidateDirReal, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        if (!str_starts_with($dirWithSep, $baseWithSep) && $candidateDirReal !== $baseReal) {
+            throw new NonTransientResourceException('File path escapes the allowed base directory.');
+        }
+
+        $fileName = basename($candidate);
+        if ('' === $fileName || '.' === $fileName || '..' === $fileName) {
+            throw new NonTransientResourceException('Invalid target file name.');
+        }
+
+        return $candidateDirReal.DIRECTORY_SEPARATOR.$fileName;
     }
 
     private static function rejectStreamWrappers(string $path): void

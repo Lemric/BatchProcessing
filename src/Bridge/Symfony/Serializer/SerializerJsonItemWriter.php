@@ -109,17 +109,17 @@ final class SerializerJsonItemWriter implements ItemWriterInterface, ItemStreamI
         if (null === $this->allowedBaseDirectory || '' === mb_trim($this->allowedBaseDirectory)) {
             throw new RuntimeException('Could not open JSON destination: allowedBaseDirectory must be configured for filesystem destinations.');
         }
-        $path = $this->destination instanceof SplFileInfo
+        $destinationPath = $this->destination instanceof SplFileInfo
             ? (string) $this->destination->getPathname()
             : (is_string($this->destination) ? $this->destination : throw new InvalidArgumentException('Unsupported destination type.'));
         try {
-            SafeLocalFilePath::assertWritableLocalPath($path, $this->allowedBaseDirectory);
+            $safePath = SafeLocalFilePath::resolveWritablePathUnderBaseDirectory($destinationPath, $this->allowedBaseDirectory);
         } catch (NonTransientResourceException $e) {
-            throw new RuntimeException('Could not open JSON destination: '.$path, 0, $e);
+            throw new RuntimeException('Could not open JSON destination: '.$destinationPath, 0, $e);
         }
-        $handle = fopen($path, 'wb');
+        $handle = fopen($safePath, 'wb');
         if (false === $handle) {
-            throw new RuntimeException('Could not open JSON destination: '.$path);
+            throw new RuntimeException('Could not open JSON destination: '.$destinationPath);
         }
 
         return $handle;
