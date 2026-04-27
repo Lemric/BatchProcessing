@@ -1,27 +1,29 @@
-# Lemric BatchProcessing
+<h1 align="center">Lemric BatchProcessing</h1>
 
-[![PHP](https://img.shields.io/badge/PHP-%E2%89%A58.4-777BB4)](https://www.php.net/)
-[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
+<p align="center">
+    <em>Enterprise-grade batch processing for PHP 8.4+.</em>
+</p>
 
-Enterprise-grade batch processing library for **PHP 8.4+**, modelled after Spring Batch.
-Framework-agnostic (PSR-3, PSR-11, PSR-14), with optional bridges for Symfony 7+ and Laravel 11+.
+<p align="center">
+    <a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-%E2%89%A58.4-777BB4" alt="PHP"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-Dual%20License-blue" alt="License"></a>
+    <a href="https://github.com/Lemric/BatchProcessing/issues"><img src="https://img.shields.io/badge/issues-GitHub-181717" alt="Issues"></a>
+</p>
 
-## ✨ Features
+---
 
-- **Job / Step / Chunk** model with full restart semantics.
-- **Chunk-oriented processing** with per-chunk transactions and **scan-mode** skip handling.
-- **Tasklet steps** for arbitrary unit-of-work logic.
-- **Pluggable retry framework** (`SimpleRetryPolicy`, `NeverRetryPolicy`, `AlwaysRetryPolicy`,
-  `ExceptionClassifierRetryPolicy`, `CompositeRetryPolicy`) with `Fixed`, `Exponential` and
-  `UniformRandom` back-off policies.
-- **Skip framework** (`LimitCheckingItemSkipPolicy`, `ExceptionClassifierSkipPolicy`, …).
-- **Repository persistence** via the metadata schema (`InMemoryJobRepository` for tests,
-  `PdoJobRepository` for MySQL 8+, PostgreSQL 14+ and SQLite 3.37+).
-- **Listeners and PSR-14 events** for `Job`, `Step`, `Chunk`, `Item read/process/write`.
-- **Fluent Builder API** (`JobBuilder`, `StepBuilder`).
-- **Bundled readers / writers**: iterator, callback, transforming, PDO (cursor) and CSV reader;
-  callback, PDO and composite writer.
-- **Testing utilities**: `JobLauncherTestUtils`, `MockItemReader`, `InMemoryItemWriter`.
+Lemric BatchProcessing is a framework-agnostic library for building robust,
+restartable, observable batch jobs in PHP.
+Compliance with PSR standards and the idiomatic PHP style.
+
+## Why Lemric BatchProcessing?
+
+* **Production-ready** — atomic per-chunk transactions, full restart semantics,
+  durable metadata.
+* **Framework-agnostic** — works standalone, with optional bridges for Symfony
+  6.4/7+ and Laravel 11+/12+.
+* **Standards-first** — PSR-3 logger, PSR-6/16 cache, PSR-11 container, PSR-14 events.
+* **Modern PHP** — readonly classes, enums, attributes, typed properties, strict types.
 
 ## Installation
 
@@ -29,162 +31,88 @@ Framework-agnostic (PSR-3, PSR-11, PSR-14), with optional bridges for Symfony 7+
 composer require lemric/batch-processing
 ```
 
-Requires PHP **>= 8.4**. The PDO repositories require the `pdo` extension (and a corresponding
-driver – `pdo_mysql`, `pdo_pgsql` or `pdo_sqlite`).
+Requires **PHP 8.4** or higher.
 
-## 60-second example
+## Quick Example
 
 ```php
 use Lemric\BatchProcessing\BatchProcessing;
 use Lemric\BatchProcessing\Domain\JobParameters;
 use Lemric\BatchProcessing\Item\Reader\IteratorItemReader;
-use Lemric\BatchProcessing\Item\Processor\FilteringItemProcessor;
 use Lemric\BatchProcessing\Testing\InMemoryItemWriter;
 
-$ctx = BatchProcessing::inMemory(); // wires repository, tx manager, factories, launcher
-
-$reader    = new IteratorItemReader(range(1, 10));
-$processor = new FilteringItemProcessor(fn (int $i): bool => $i % 2 === 0);
-$writer    = new InMemoryItemWriter();
+$ctx    = BatchProcessing::inMemory();
+$reader = new IteratorItemReader(range(1, 1000));
+$writer = new InMemoryItemWriter();
 
 $step = $ctx['stepBuilderFactory']->get('demoStep')
-    ->chunk(3, $reader, $processor, $writer)
-    ->faultTolerant()
-    ->retry(\RuntimeException::class, maxAttempts: 3)
-    ->skip(\BatchProcessing\Exception\SkippableException::class)
-    ->skipLimit(50)
+    ->chunk(100, $reader, null, $writer)
     ->build();
 
 $job = $ctx['jobBuilderFactory']->get('demoJob')->start($step)->build();
 
 $execution = $ctx['launcher']->run($job, JobParameters::of(['run.id' => 1]));
 
-echo $execution->getStatus()->value, PHP_EOL; // COMPLETED
-print_r($writer->getWrittenItems());          // [2, 4, 6, 8, 10]
+echo $execution->getStatus()->value; // COMPLETED
 ```
 
-## Architecture
+## Documentation
 
-```
-src/
-├── BatchProcessing.php          # static facade (inMemory bootstrap)
-├── Domain/                      # value objects: BatchStatus, ExitStatus, JobParameters, …
-├── Job/                         # JobInterface, AbstractJob, SimpleJob, JobBuilder, RunIdIncrementer
-├── Step/                        # StepInterface, AbstractStep, ChunkOrientedStep, TaskletStep, StepBuilder
-├── Item/                        # ItemReader/Processor/Writer/Stream interfaces and built-ins
-├── Chunk/                       # Chunk + ChunkContext
-├── Repository/                  # JobRepositoryInterface, InMemoryJobRepository, PdoJobRepository(+Schema)
-├── Launcher/                    # SimpleJobLauncher
-├── Explorer/                    # SimpleJobExplorer
-├── Operator/                    # SimpleJobOperator (start/stop/restart/abandon)
-├── Registry/                    # JobRegistryInterface, InMemory + Container (PSR-11) impls
-├── Retry/                       # RetryTemplate, policies, back-off strategies
-├── Skip/                        # Skip policies
-├── Listener/                    # Listener interfaces + CompositeListener
-├── Event/                       # PSR-14 events: Before/AfterJob, Step, Chunk + *FailedEvent
-├── Transaction/                 # TransactionManagerInterface, PdoTransactionManager, ResourcelessTransactionManager
-├── Exception/                   # Domain exception hierarchy
-└── Testing/                     # MockItemReader, InMemoryItemWriter, JobLauncherTestUtils
-```
+Full documentation lives in the [`docs/`](docs/index.md) directory:
 
-## Repository schema
+* **[Getting Started](docs/index.md)** — installation, quick start, architecture.
+* **[Core Concepts](docs/index.md#core-concepts)** — domain model, jobs, steps, chunks.
+* **[Reading & Writing](docs/index.md#reading--writing)** — readers, processors, writers.
+* **[Error Handling](docs/index.md#error-handling)** — retry, skip, exceptions.
+* **[Infrastructure](docs/index.md#infrastructure)** — repository, transactions, events.
+* **[Advanced](docs/index.md#advanced)** — partitioning, flow jobs, scopes, restart.
+* **[Framework Integration](docs/index.md#framework-integration)** — Symfony & Laravel.
+* **[Reference](docs/index.md#reference)** — configuration, PSR, testing, performance.
 
-The bundled `PdoJobRepositorySchema` produces the DDL needed to create the metadata schema for
-SQLite, MySQL or PostgreSQL:
+## Development
 
-```php
-use Lemric\BatchProcessing\Repository\PdoJobRepositorySchema;
+Clone the repository and install dependencies:
 
-$pdo = new PDO('sqlite::memory:');
-foreach (PdoJobRepositorySchema::sqlForPdo($pdo, prefix: 'batch_') as $sql) {
-    $pdo->exec($sql);
-}
+```bash
+git clone https://github.com/Lemric/BatchProcessing.git
+cd BatchProcessing
+composer install
 ```
 
-In production prefer running this output through your migration tool of choice (Doctrine
-Migrations, Laravel migrations, …).
-
-## Restart semantics
-
-* A `JobInstance` is identified by `(jobName, hash(identifyingParameters))`.
-* Re-running with the same identifying parameters reuses the existing instance:
-  * already `COMPLETED` → `JobInstanceAlreadyCompleteException`
-  * still running       → `JobExecutionAlreadyRunningException`
-  * `FAILED`/`STOPPED`  → resumes (unless the job is `preventRestart`)
-* `ItemStreamInterface` lets readers / writers persist their cursor into the `ExecutionContext`
-  after every committed chunk – the next run picks up where the previous one left off.
-
-## Retry & Skip
-
-Retry and skip are completely independent strategies. The fluent builder exposes them per
-step:
-
-```php
-$stepBuilderFactory->get('importStep')
-    ->chunk(500, $reader, $processor, $writer)
-    ->faultTolerant()
-    ->retry(\PDOException::class, maxAttempts: 3)
-    ->backOff(new ExponentialBackOffPolicy(initial: 200, multiplier: 2.0, max: 5_000))
-    ->skip(\Lemric\BatchProcessing\Exception\SkippableException::class)
-    ->skipLimit(100)
-    ->listener($myListener)
-    ->build();
-```
-
-## PSR integration
-
-| PSR     | Where                                                                               |
-|---------|-------------------------------------------------------------------------------------|
-| PSR-3   | All long-running components implement `LoggerAwareInterface`                        |
-| PSR-11  | `ContainerJobRegistry` resolves jobs from any PSR-11 container                      |
-| PSR-14  | `AbstractJob` / `AbstractStep` accept an `EventDispatcherInterface` and dispatch    |
-|         | `BeforeJobEvent`, `AfterJobEvent`, `JobFailedEvent`, plus their `Step` and `Chunk`  |
-|         | counterparts                                                                        |
-
-## Testing
-
-The repository ships with a full `phpunit.xml.dist` configuration. To run the suite:
+Run the test suite:
 
 ```bash
 composer test
 ```
 
-PHPStan configuration is included in `phpstan.neon.dist`:
+Run static analysis and code style fixes:
 
 ```bash
 composer stan
 ```
 
-## Roadmap
+## Support
 
-| Version | Scope                                                                            |
-|---------|----------------------------------------------------------------------------------|
-| 1.0.x   | Core (this release): Job / Step / Chunk, retry, skip, repositories, PSR support  |
-| 1.1.0   | `PartitionStep` + `FiberTaskExecutor`, `AsyncJobLauncher` (Messenger/Queue)      |
-| 1.2.0   | Remote partitioning (AMQP/Redis), distributed step execution                     |
-| 1.3.0   | Web dashboard (Symfony UX), Prometheus / StatsD metrics exporter                 |
+* **Issues**: [GitHub Issues](https://github.com/Lemric/BatchProcessing/issues)
+* **Security**: [Security Policy](https://github.com/Lemric/BatchProcessing/security)
+* **Discussions**: [GitHub Discussions](https://github.com/Lemric/BatchProcessing/discussions)
 
 ## License
 
-This project is developed by Lemric and is available under a dual licensing model:
+This project is developed by Lemric and is available under a **dual licensing model**:
 
-- Free for Open Source use  
-  You may use this library at no cost in projects that are fully open source and released under an OSI-approved license.
+| Use case                       | Allowed | Cost                    |
+|--------------------------------|---------|-------------------------|
+| Open Source project            | ✅      | Free                    |
+| Personal non-commercial use    | ✅      | Free                    |
+| Commercial / SaaS / enterprise | ❌      | Paid license required   |
+| Closed-source project          | ❌      | Paid license required   |
 
-- Commercial use requires a license  
-  If you use this library in any proprietary, closed-source, SaaS, or commercial environment, you must obtain a commercial license from Lemric.
+For commercial licensing inquiries, contact: **dominik@labudzinski.com**
 
-### Summary
+See the [LICENSE](LICENSE) file for full terms.
 
-| Use case                         | Allowed | Cost        |
-|--------------------------------|--------|-------------|
-| Open Source project            | ✅     | Free        |
-| Personal non-commercial use    | ✅     | Free        |
-| Commercial / SaaS / enterprise | ❌     | Paid license required |
-| Closed-source project          | ❌     | Paid license required |
+## Authors
 
-For commercial licensing:
-dominik@labudzinski.com
-
-See the LICENSE file for full terms.
-
+* **Dominik Labudzinski** — [dominik@labudzinski.com](mailto:dominik@labudzinski.com) — [labudzinski.com](https://labudzinski.com)
+* **Lemric** — [lemric.com](https://lemric.com)

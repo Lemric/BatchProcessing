@@ -1,0 +1,7 @@
+.idea
+*.iml
+vendor
+*.lock
+*.cache
+coverage
+.DS_Store

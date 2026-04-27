@@ -1,0 +1,103 @@
+{# @WebProfiler/Collector/lemric_batch.html.twig — rendered as the Batch panel by Symfony Web Profiler #}
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block toolbar %}
+    {% set jobCount = collector.jobCount %}
+    {% set failedCount = collector.failedJobCount %}
+    {% set status = failedCount > 0 ? 'red' : (jobCount > 0 ? 'green' : 'normal') %}
+    {% set icon %}
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 5h18v4H3V5zm0 6h18v4H3v-4zm0 6h18v2H3v-2z"/></svg>
+        </span>
+        <span class="sf-toolbar-value">{{ jobCount }}</span>
+    {% endset %}
+    {% set text %}
+        <div class="sf-toolbar-info-piece">
+            <b>Jobs launched</b>
+            <span class="sf-toolbar-status">{{ jobCount }}</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Failed</b>
+            <span class="sf-toolbar-status sf-toolbar-status-{{ failedCount > 0 ? 'red' : 'green' }}">{{ failedCount }}</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Steps tracked</b>
+            <span>{{ collector.steps|length }}</span>
+        </div>
+    {% endset %}
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: profiler_url, status: status }) }}
+{% endblock %}
+
+{% block menu %}
+    <span class="label {{ collector.failedJobCount > 0 ? 'label-status-error' : '' }}">
+        <span class="icon">B</span>
+        <strong>Batch</strong>
+        <span class="count"><span>{{ collector.jobCount }}</span></span>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    <h2>Batch — Job Executions</h2>
+
+    {% if collector.jobs is empty %}
+        <div class="empty"><p>No jobs were launched during this request.</p></div>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Id</th><th>Job</th><th>Status</th><th>Exit</th>
+                    <th>Started</th><th>Ended</th><th>Duration (ms)</th><th>Identifying params</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in collector.jobs %}
+                <tr>
+                    <td>{{ job.id ?? '—' }}</td>
+                    <td><code>{{ job.name }}</code></td>
+                    <td><span class="label label-status-{{ job.status == 'COMPLETED' ? 'success' : 'error' }}">{{ job.status }}</span></td>
+                    <td>{{ job.exitCode }}</td>
+                    <td>{{ job.startTime ?? '—' }}</td>
+                    <td>{{ job.endTime ?? '—' }}</td>
+                    <td>{{ job.durationMs ? job.durationMs|number_format(2) : '—' }}</td>
+                    <td><small>{{ job.parameters }}</small></td>
+                </tr>
+                {% if job.failures is not empty %}
+                <tr><td colspan="8"><pre>{{ job.failures|join("\n") }}</pre></td></tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <h2>Step Executions</h2>
+    {% if collector.steps is empty %}
+        <div class="empty"><p>No step executions were tracked.</p></div>
+    {% else %}
+        <table>
+            <thead>
+                <tr><th>Id</th><th>Step</th><th>Status</th><th>Read</th><th>Write</th><th>Commits</th><th>Rollbacks</th><th>Skips</th><th>Duration (ms)</th></tr>
+            </thead>
+            <tbody>
+                {% for step in collector.steps %}
+                <tr>
+                    <td>{{ step.id ?? '—' }}</td>
+                    <td><code>{{ step.name }}</code></td>
+                    <td>{{ step.status }}</td>
+                    <td>{{ step.readCount }}</td>
+                    <td>{{ step.writeCount }}</td>
+                    <td>{{ step.commitCount }}</td>
+                    <td>{{ step.rollbackCount }}</td>
+                    <td>{{ step.skipCount }}</td>
+                    <td>{{ step.durationMs ? step.durationMs|number_format(2) : '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if collector.errors is not empty %}
+        <h2>Errors</h2>
+        <pre>{{ collector.errors|join("\n") }}</pre>
+    {% endif %}
+{% endblock %}
+

@@ -1,0 +1,96 @@
+{
+  "name": "lemric/batch-processing",
+  "description": "Batch Processing",
+  "type": "library",
+  "license": "Dual License",
+  "keywords": [
+    "batch",
+    "etl",
+    "chunk",
+    "job",
+    "enterprise"
+  ],
+  "minimum-stability": "stable",
+  "support": {
+    "issues": "https://github.com/Lemric/BatchProcessing/issues",
+    "security": "https://github.com/Lemric/BatchProcessing/security",
+    "forum": "https://github.com/Lemric/BatchProcessing/discussions"
+  },
+  "authors": [
+    {
+      "name": "Dominik Labudzinski",
+      "email": "dominik@labudzinski.com",
+      "homepage": "https://labudzinski.com"
+    },
+    {
+      "name": "Lemric",
+      "homepage": "https://lemric.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.4",
+    "psr/cache": "^3.0",
+    "psr/container": "^2.0",
+    "psr/event-dispatcher": "^1.0",
+    "psr/log": "^3.0",
+    "psr/simple-cache": "^3.0"
+  },
+  "require-dev": {
+    "doctrine/dbal": "^4.0",
+    "doctrine/migrations": "^3.0",
+    "doctrine/orm": "^3.0",
+    "friendsofphp/php-cs-fixer": "^3.95",
+    "illuminate/console": "^11.0 || ^12.0",
+    "illuminate/contracts": "^11.0 || ^12.0",
+    "illuminate/queue": "^11.0 || ^12.0",
+    "illuminate/support": "^11.0 || ^12.0",
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^13.1",
+    "roave/security-advisories": "dev-latest",
+    "symfony/config": "^6.4 || ^7.0",
+    "symfony/console": "^6.4 || ^7.0",
+    "symfony/dependency-injection": "^6.4 || ^7.0",
+    "symfony/expression-language": "^7.0",
+    "symfony/http-kernel": "^6.4 || ^7.0",
+    "symfony/lock": "^7.0",
+    "symfony/mailer": "^7.0",
+    "symfony/messenger": "^6.4 || ^7.0",
+    "symfony/mime": "^7.0",
+    "symfony/serializer": "^7.0",
+    "symfony/validator": "^7.0",
+    "symfony/yaml": "^6.4 || ^7.0"
+  },
+  "suggest": {
+    "ext-pdo": "Required for PdoJobRepository, PdoItemReader, PdoItemWriter and PdoTransactionManager.",
+    "ext-pcntl": "Enables atomic, signal-safe spawn/cleanup in SystemCommandTasklet and graceful SIGTERM/SIGINT handling in JobLauncher.",
+    "ext-redis": "For RedisItemReader/RedisItemWriter (alternative to predis/predis).",
+    "predis/predis": "For RedisItemReader/RedisItemWriter.",
+    "symfony/event-dispatcher": "Provides a fully-featured PSR-14 event dispatcher.",
+    "symfony/expression-language": "For SpEL-like late-binding expressions in step/job scope.",
+    "symfony/lock": "For single-instance job enforcement via LockingJobLauncher.",
+    "symfony/messenger": "For asynchronous job execution via Symfony Messenger.",
+    "symfony/serializer": "For Symfony Serializer-based JSON item reader/writer adapters.",
+    "symfony/stopwatch": "For Stopwatch integration in Symfony Profiler (timeline per Job/Step/Chunk).",
+    "symfony/validator": "For BeanValidatingItemProcessor backed by Symfony Validator.",
+    "doctrine/orm": "For DoctrineRepositoryItemReader/Writer.",
+    "laravel/framework": "For Laravel Bridge integration."
+  },
+  "autoload": {
+    "psr-4": {
+      "Lemric\\BatchProcessing\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Lemric\\BatchProcessing\\Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true
+  },
+  "scripts": {
+    "test": "phpunit",
+    "stan": "php-cs-fixer fix && phpstan analyse src tests --level max --memory-limit=-1"
+  }
+}
