@@ -16,7 +16,7 @@ use Lemric\BatchProcessing\Item\Processor\FilteringItemProcessor;
 use Lemric\BatchProcessing\Testing\InMemoryItemWriter;
 
 // 1. Bootstrap — wires repository, transaction manager, factories, launcher
-$ctx = BatchProcessing::inMemory();
+$env = BatchProcessing::inMemoryEnvironment();
 
 // 2. Define components
 $reader    = new IteratorItemReader(range(1, 10));
@@ -24,17 +24,17 @@ $processor = new FilteringItemProcessor(fn (int $i): bool => $i % 2 === 0);
 $writer    = new InMemoryItemWriter();
 
 // 3. Build a step
-$step = $ctx['stepBuilderFactory']->get('filterEvenNumbers')
+$step = $env->stepBuilderFactory->get('filterEvenNumbers')
     ->chunk(3, $reader, $processor, $writer)
     ->build();
 
 // 4. Build a job
-$job = $ctx['jobBuilderFactory']->get('demoJob')
+$job = $env->jobBuilderFactory->get('demoJob')
     ->start($step)
     ->build();
 
 // 5. Launch
-$execution = $ctx['launcher']->run($job, JobParameters::of(['run.id' => 1]));
+$execution = $env->launcher->run($job, JobParameters::of(['run.id' => 1]));
 
 echo $execution->getStatus()->value, PHP_EOL; // COMPLETED
 print_r($writer->getWrittenItems());          // [2, 4, 6, 8, 10]
@@ -46,7 +46,7 @@ Fault-Tolerant Example
 Add retry and skip policies to handle transient failures:
 
 ```php
-$step = $ctx['stepBuilderFactory']->get('importStep')
+$step = $env->stepBuilderFactory->get('importStep')
     ->chunk(500, $reader, $processor, $writer)
     ->faultTolerant()
     ->retry(\RuntimeException::class, maxAttempts: 3)
@@ -72,16 +72,17 @@ foreach (PdoJobRepositorySchema::sqlForPdo($pdo, prefix: 'batch_') as $sql) {
 }
 
 // Bootstrap the environment
-$ctx = BatchProcessing::pdo($pdo, tablePrefix: 'batch_');
+$env = BatchProcessing::pdoEnvironment($pdo, tablePrefix: 'batch_');
 
 // Build and launch jobs as shown above
-$execution = $ctx['launcher']->run($job, $parameters);
+$execution = $env->launcher->run($job, $parameters);
 ```
 
-The bootstrap context returned by `BatchProcessing::inMemory()`,
-`BatchProcessing::pdo()` and `BatchProcessing::async()` always contains:
+The bootstrap environment returned by `BatchProcessing::inMemoryEnvironment()`,
+`BatchProcessing::pdoEnvironment()` and `BatchProcessing::asyncEnvironment()` is
+an immutable `BatchEnvironment` object with:
 
-| Key                  | Type                                              |
+| Property             | Type                                              |
 |----------------------|---------------------------------------------------|
 | `repository`         | `JobRepositoryInterface`                          |
 | `transactionManager` | `TransactionManagerInterface`                     |
