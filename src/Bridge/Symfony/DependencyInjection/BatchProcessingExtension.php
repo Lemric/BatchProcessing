@@ -12,21 +12,24 @@ declare(strict_types=1);
 
 namespace Lemric\BatchProcessing\Bridge\Symfony\DependencyInjection;
 
-use Lemric\BatchProcessing\Bridge\Symfony\Command\{
-    AbandonJobCommand,
+use Lemric\BatchProcessing\Bridge\Symfony\Command\{AbandonJobCommand,
+    CleanupCommand,
+    HealthCommand,
     JobStatusCommand,
     LaunchJobCommand,
     ListJobExecutionsCommand,
     RestartJobCommand,
-    StopJobCommand,
-};
+    StopJobCommand};
 use Lemric\BatchProcessing\Bridge\Symfony\Messenger\{MessengerJobDispatcher, RunJobMessageHandler};
 use Lemric\BatchProcessing\Explorer\{JobExplorerInterface, SimpleJobExplorer};
 use Lemric\BatchProcessing\Launcher\{AsyncJobLauncher, JobLauncherInterface, SimpleJobLauncher};
 use Lemric\BatchProcessing\Operator\{JobOperatorInterface, SimpleJobOperator};
 use Lemric\BatchProcessing\Registry\{InMemoryJobRegistry, JobRegistryInterface};
 use Lemric\BatchProcessing\Repository\{InMemoryJobRepository, JobRepositoryInterface, PdoJobRepository};
-use Lemric\BatchProcessing\Security\{AsyncJobMessageSigner, JobExecutionAccessCheckerInterface, NoOpJobExecutionAccessChecker, SqlIdentifierValidator};
+use Lemric\BatchProcessing\Security\{AsyncJobMessageSigner,
+    JobExecutionAccessCheckerInterface,
+    NoOpJobExecutionAccessChecker,
+    SqlIdentifierValidator};
 use Lemric\BatchProcessing\Transaction\{PdoTransactionManager, TransactionManagerInterface};
 use PDO;
 use ReflectionClass;
@@ -127,6 +130,12 @@ final class BatchProcessingExtension extends Extension
         $this->registerCommand($container, AbandonJobCommand::class, [
             new Reference(JobOperatorInterface::class),
             new Reference(JobExecutionAccessCheckerInterface::class),
+        ]);
+        $this->registerCommand($container, CleanupCommand::class, [
+            new Reference(JobOperatorInterface::class),
+        ]);
+        $this->registerCommand($container, HealthCommand::class, [
+            new Reference(JobExplorerInterface::class),
         ]);
 
         // --- messenger handler --------------------------------------------
