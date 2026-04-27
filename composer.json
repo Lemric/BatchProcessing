@@ -2,7 +2,7 @@
   "name": "lemric/batch-processing",
   "description": "Batch Processing",
   "type": "library",
-  "license": "Dual License",
+  "license": "proprietary",
   "keywords": [
     "batch",
     "etl",
