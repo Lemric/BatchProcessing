@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Lemric\BatchProcessing\Tests\Step;
 
-use Lemric\BatchProcessing\BatchProcessing;
+use Lemric\BatchProcessing\BatchEnvironmentBuilder;
 use Lemric\BatchProcessing\Chunk\Chunk;
 use Lemric\BatchProcessing\Domain\{BatchStatus, JobParameters};
 use Lemric\BatchProcessing\Item\{ItemReaderInterface, ItemWriterInterface};
@@ -25,16 +25,15 @@ use Lemric\BatchProcessing\Step\{ChunkOrientedStep, StepBuilder, StepInterface};
 use Lemric\BatchProcessing\Tests\Step\Fixture\NoopTasklet;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-
 use function count;
 
 final class StepBuilderExtensionsTest extends TestCase
 {
     public function testFlowJobBuiltViaJobBuilder(): void
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
-        $launcher = $env['launcher'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
+        $launcher = $env->launcher;
 
         $stepA = new StepBuilder('a', $repo)->tasklet(new NoopTasklet())->build();
         $stepB = new StepBuilder('b', $repo)->tasklet(new NoopTasklet())->build();
@@ -57,8 +56,8 @@ final class StepBuilderExtensionsTest extends TestCase
 
     public function testPartitionedStepIsBuiltViaBuilder(): void
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
 
         $worker = new StepBuilder('worker', $repo)
             ->tasklet(new NoopTasklet())
@@ -97,8 +96,8 @@ final class StepBuilderExtensionsTest extends TestCase
 
     public function testRetryPolicyAndSkipPolicyAreHonoured(): void
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
 
         $reader = $this->makeReader([1, 2, 3]);
         $writer = $this->makeWriter();
@@ -117,8 +116,8 @@ final class StepBuilderExtensionsTest extends TestCase
 
     public function testSimpleJobStillProducedByDefault(): void
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
         $step = new StepBuilder('only', $repo)->tasklet(new NoopTasklet())->build();
         $job = new JobBuilder('plain', $repo)->start($step)->build();
         self::assertInstanceOf(SimpleJob::class, $job);

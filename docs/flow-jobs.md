@@ -11,7 +11,11 @@ Switch the builder into flow mode with `.flow()`, then declare transitions with
 `transition($from, $exitCode, $to)`:
 
 ```php
-$job = $ctx['jobBuilderFactory']->get('orderPipeline')
+use Lemric\BatchProcessing\BatchProcessing;
+
+$env = BatchProcessing::inMemoryEnvironment();
+
+$job = $env->jobBuilderFactory->get('orderPipeline')
     ->flow()
     ->start($importStep)
     ->transition($importStep, 'COMPLETED', $enrichStep)
@@ -49,7 +53,7 @@ final class OrderVolumeDecider implements FlowDeciderInterface
     }
 }
 
-$job = $ctx['jobBuilderFactory']->get('adaptivePipeline')
+$job = $env->jobBuilderFactory->get('adaptivePipeline')
     ->flow()
     ->start($importStep)
     ->decider($importStep, new OrderVolumeDecider())
@@ -68,7 +72,7 @@ Parallel Splits
 concurrently using PHP Fibers:
 
 ```php
-$job = $ctx['jobBuilderFactory']->get('parallelPipeline')
+$job = $env->jobBuilderFactory->get('parallelPipeline')
     ->start($prepareStep)
     ->split($branchA, $branchB, $branchC)
     ->next($mergeStep)

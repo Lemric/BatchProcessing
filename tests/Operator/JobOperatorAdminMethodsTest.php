@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Lemric\BatchProcessing\Tests\Operator;
 
-use Lemric\BatchProcessing\BatchProcessing;
+use Lemric\BatchProcessing\{BatchEnvironment, BatchEnvironmentBuilder};
 use Lemric\BatchProcessing\Chunk\ChunkContext;
 use Lemric\BatchProcessing\Domain\{JobParameters, StepContribution};
 use Lemric\BatchProcessing\Exception\JobExecutionException;
@@ -21,7 +21,6 @@ use Lemric\BatchProcessing\Operator\SimpleJobOperator;
 use Lemric\BatchProcessing\Repository\{InMemoryJobRepository, JobRepositoryInterface};
 use Lemric\BatchProcessing\Step\{RepeatStatus, TaskletInterface};
 use PHPUnit\Framework\TestCase;
-
 use function assert;
 
 final class JobOperatorAdminMethodsTest extends TestCase
@@ -30,9 +29,9 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
         /** @var InMemoryJobRepository $repo */
-        $repo = $env['repository'];
+        $repo = $env->repository;
 
         $execId = $op->start('testJob', new JobParameters([]));
         $instance = $repo->getJobExecution($execId)?->getJobInstance();
@@ -46,7 +45,7 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
 
         $op->start('testJob', new JobParameters([]));
         $instances = $op->getJobInstances('testJob', 0, 10);
@@ -57,7 +56,7 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
 
         $names = $op->getJobNames();
         self::assertContains('testJob', $names);
@@ -68,7 +67,7 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
 
         $params = JobParameters::of(['key' => 'val']);
         $execId = $op->start('testJob', $params);
@@ -80,7 +79,7 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
 
         $this->expectException(JobExecutionException::class);
         $op->getParameters(9999);
@@ -90,7 +89,7 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
 
         // After completion, no running executions
         $op->start('testJob', new JobParameters([]));
@@ -102,7 +101,7 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
 
         $execId = $op->start('testJob', new JobParameters([]));
         $summaries = $op->getStepExecutionSummaries($execId);
@@ -113,7 +112,7 @@ final class JobOperatorAdminMethodsTest extends TestCase
     {
         $env = $this->env();
         /** @var SimpleJobOperator $op */
-        $op = $env['operator'];
+        $op = $env->operator;
 
         $execId = $op->start('testJob', new JobParameters([]));
         $summary = $op->getSummary($execId);
@@ -139,14 +138,11 @@ final class JobOperatorAdminMethodsTest extends TestCase
         return $job;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function env(): array
+    private function env(): BatchEnvironment
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
-        $registry = $env['registry'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
+        $registry = $env->registry;
 
         $registry->register('testJob', fn () => $this->buildJob($repo, 'testJob'));
         $registry->register('otherJob', fn () => $this->buildJob($repo, 'otherJob'));

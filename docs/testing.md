@@ -119,7 +119,7 @@ final class ImportOrdersJobTest extends TestCase
     public function testImportFiltersZeroAmountOrders(): void
     {
         // Arrange
-        $ctx = BatchProcessing::inMemory();
+        $env = BatchProcessing::inMemoryEnvironment();
 
         $reader = MockItemReader::ofList([
             new Order(1, 99.99),
@@ -130,16 +130,16 @@ final class ImportOrdersJobTest extends TestCase
         $processor = new OrderProcessor(minTotal: 10.0);
         $writer    = new InMemoryItemWriter();
 
-        $step = $ctx['stepBuilderFactory']->get('importStep')
+        $step = $env->stepBuilderFactory->get('importStep')
             ->chunk(10, $reader, $processor, $writer)
             ->build();
 
-        $job = $ctx['jobBuilderFactory']->get('importJob')
+        $job = $env->jobBuilderFactory->get('importJob')
             ->start($step)
             ->build();
 
         // Act
-        $execution = $ctx['launcher']->run($job, JobParameters::of(['run.id' => 1]));
+        $execution = $env->launcher->run($job, JobParameters::of(['run.id' => 1]));
 
         // Assert
         self::assertSame(BatchStatus::COMPLETED, $execution->getStatus());

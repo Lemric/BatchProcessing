@@ -8,7 +8,18 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Changed
+
+- Static facade environment API now returns a typed `BatchEnvironment` object:
+  - `BatchProcessing::inMemoryEnvironment()`
+  - `BatchProcessing::pdoEnvironment(\PDO $pdo, string $tablePrefix = 'batch_')`
+  - `BatchProcessing::asyncEnvironment(callable $dispatcher, ?JobRepositoryInterface, ?TransactionManagerInterface)`
+- Added `BatchProcessing::environment(?callable $configure = null)` and
+  `BatchProcessing::builder()` as canonical programmatic entry points.
+- Added `BatchEnvironment::toBuilder()` to support safe reconfiguration from an
+  existing environment.
+- `BatchEnvironmentBuilder` now supports factory-based customization for every
+  dependency (`with*Factory()` methods), while keeping fluent direct overrides.
 
 ## [1.0.0] – 2026-04-27
 

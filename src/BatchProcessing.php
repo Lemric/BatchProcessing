@@ -13,72 +13,60 @@ declare(strict_types=1);
 namespace Lemric\BatchProcessing;
 
 use Lemric\BatchProcessing\Domain\JobParameters;
-use Lemric\BatchProcessing\Explorer\{JobExplorerInterface, SimpleJobExplorer};
-use Lemric\BatchProcessing\Job\{JobBuilder, JobBuilderFactory};
-use Lemric\BatchProcessing\Launcher\{AsyncJobLauncher, JobLauncherInterface, SimpleJobLauncher};
-use Lemric\BatchProcessing\Operator\{JobOperatorInterface, SimpleJobOperator};
-use Lemric\BatchProcessing\Registry\{InMemoryJobRegistry, JobRegistryInterface};
-use Lemric\BatchProcessing\Repository\{InMemoryJobRepository, JobRepositoryInterface, PdoJobRepository, PdoJobRepositorySchema};
-use Lemric\BatchProcessing\Step\{StepBuilder, StepBuilderFactory};
-use Lemric\BatchProcessing\Transaction\{PdoTransactionManager, ResourcelessTransactionManager, TransactionManagerInterface};
+use Lemric\BatchProcessing\Job\JobBuilder;
+use Lemric\BatchProcessing\Repository\JobRepositoryInterface;
+use Lemric\BatchProcessing\Step\StepBuilder;
+use Lemric\BatchProcessing\Transaction\TransactionManagerInterface;
 use PDO;
 
 /**
  * Static facade providing the most common entry points to the framework.
  *
- * In production, prefer wiring the building blocks (repository, transaction manager, factories)
- * through your DI container of choice.
+ * Use {@see builder()} to obtain a fully configurable {@see BatchEnvironmentBuilder},
+ * or the convenience shortcuts {@see job()} / {@see step()} for ad-hoc building.
+ *
+ * In production, prefer wiring the building blocks through your DI container
+ * or use {@see BatchEnvironmentBuilder} directly for full control.
  */
 final class BatchProcessing
 {
     /**
-     * Same as {@see inMemory()} but the launcher is an {@see AsyncJobLauncher} that delegates
-     * actual execution to the supplied dispatcher (e.g. Symfony Messenger / Laravel Queue).
-     *
-     * @param callable(int, string, JobParameters): void $dispatcher receives (jobExecutionId, jobName, parameters)
-     *
-     * @return array{
-     *     repository: JobRepositoryInterface,
-     *     transactionManager: TransactionManagerInterface,
-     *     stepBuilderFactory: StepBuilderFactory,
-     *     jobBuilderFactory: JobBuilderFactory,
-     *     launcher: JobLauncherInterface,
-     *     registry: JobRegistryInterface,
-     *     operator: JobOperatorInterface,
-     *     explorer: JobExplorerInterface
-     * }
+     * @param callable(int, string, JobParameters): void $dispatcher
      */
-    public static function async(callable $dispatcher, ?JobRepositoryInterface $repository = null, ?TransactionManagerInterface $transactionManager = null): array
-    {
-        $repo = $repository ?? new InMemoryJobRepository();
-        $tx = $transactionManager ?? new ResourcelessTransactionManager();
-        $launcher = new AsyncJobLauncher($repo, $dispatcher);
-
-        return self::buildEnvironment($repo, $tx, $launcher);
+    public static function asyncEnvironment(
+        callable $dispatcher,
+        ?JobRepositoryInterface $repository = null,
+        ?TransactionManagerInterface $transactionManager = null,
+    ): BatchEnvironment {
+        return BatchEnvironmentBuilder::async($dispatcher, $repository, $transactionManager)->build();
     }
 
     /**
-     * Builds a fully wired environment using an in-memory repository and a no-op transaction
-     * manager. Useful for tests, scripts and quick experiments.
-     *
-     * @return array{
-     *     repository: JobRepositoryInterface,
-     *     transactionManager: TransactionManagerInterface,
-     *     stepBuilderFactory: StepBuilderFactory,
-     *     jobBuilderFactory: JobBuilderFactory,
-     *     launcher: JobLauncherInterface,
-     *     registry: JobRegistryInterface,
-     *     operator: JobOperatorInterface,
-     *     explorer: JobExplorerInterface
-     * }
+     * Returns a fresh {@see BatchEnvironmentBuilder} for full configuration.
      */
-    public static function inMemory(): array
+    public static function builder(): BatchEnvironmentBuilder
     {
-        $repo = new InMemoryJobRepository();
-        $tx = new ResourcelessTransactionManager();
-        $launcher = new SimpleJobLauncher($repo);
+        return BatchEnvironmentBuilder::create();
+    }
 
-        return self::buildEnvironment($repo, $tx, $launcher);
+    /**
+     * Builds a configured environment.
+     *
+     * @param callable(BatchEnvironmentBuilder): BatchEnvironmentBuilder|null $configure
+     */
+    public static function environment(?callable $configure = null): BatchEnvironment
+    {
+        $builder = self::builder();
+        if (null !== $configure) {
+            $builder = $configure($builder);
+        }
+
+        return $builder->build();
+    }
+
+    public static function inMemoryEnvironment(): BatchEnvironment
+    {
+        return BatchEnvironmentBuilder::inMemory()->build();
     }
 
     public static function job(string $name, JobRepositoryInterface $repo): JobBuilder
@@ -86,63 +74,13 @@ final class BatchProcessing
         return new JobBuilder($name, $repo);
     }
 
-    /**
-     * Builds a production-grade environment backed by PDO. Use {@see PdoJobRepositorySchema}
-     * to provision the metadata tables when bootstrapping.
-     *
-     * @return array{
-     *     repository: JobRepositoryInterface,
-     *     transactionManager: TransactionManagerInterface,
-     *     stepBuilderFactory: StepBuilderFactory,
-     *     jobBuilderFactory: JobBuilderFactory,
-     *     launcher: JobLauncherInterface,
-     *     registry: JobRegistryInterface,
-     *     operator: JobOperatorInterface,
-     *     explorer: JobExplorerInterface
-     * }
-     */
-    public static function pdo(PDO $pdo, string $tablePrefix = 'batch_'): array
+    public static function pdoEnvironment(PDO $pdo, string $tablePrefix = 'batch_'): BatchEnvironment
     {
-        $repo = new PdoJobRepository($pdo, $tablePrefix);
-        $tx = new PdoTransactionManager($pdo);
-        $launcher = new SimpleJobLauncher($repo);
-
-        return self::buildEnvironment($repo, $tx, $launcher);
+        return BatchEnvironmentBuilder::pdo($pdo, $tablePrefix)->build();
     }
 
     public static function step(string $name, JobRepositoryInterface $repo, ?TransactionManagerInterface $tx = null): StepBuilder
     {
         return new StepBuilder($name, $repo, $tx);
-    }
-
-    /**
-     * @return array{
-     *     repository: JobRepositoryInterface,
-     *     transactionManager: TransactionManagerInterface,
-     *     stepBuilderFactory: StepBuilderFactory,
-     *     jobBuilderFactory: JobBuilderFactory,
-     *     launcher: JobLauncherInterface,
-     *     registry: JobRegistryInterface,
-     *     operator: JobOperatorInterface,
-     *     explorer: JobExplorerInterface
-     * }
-     */
-    private static function buildEnvironment(
-        JobRepositoryInterface $repo,
-        TransactionManagerInterface $tx,
-        JobLauncherInterface $launcher,
-    ): array {
-        $registry = new InMemoryJobRegistry();
-
-        return [
-            'repository' => $repo,
-            'transactionManager' => $tx,
-            'stepBuilderFactory' => new StepBuilderFactory($repo, $tx),
-            'jobBuilderFactory' => new JobBuilderFactory($repo),
-            'launcher' => $launcher,
-            'registry' => $registry,
-            'operator' => new SimpleJobOperator($launcher, $repo, $registry),
-            'explorer' => new SimpleJobExplorer($repo),
-        ];
     }
 }

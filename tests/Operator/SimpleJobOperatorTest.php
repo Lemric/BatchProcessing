@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Lemric\BatchProcessing\Tests\Operator;
 
-use Lemric\BatchProcessing\BatchProcessing;
+use Lemric\BatchProcessing\BatchEnvironmentBuilder;
 use Lemric\BatchProcessing\Chunk\ChunkContext;
 use Lemric\BatchProcessing\Domain\{BatchStatus, JobParameter, JobParameters, StepContribution};
 use Lemric\BatchProcessing\Exception\{JobExecutionException, JobInstanceAlreadyCompleteException};
@@ -22,18 +22,17 @@ use Lemric\BatchProcessing\Registry\InMemoryJobRegistry;
 use Lemric\BatchProcessing\Repository\{InMemoryJobRepository, JobRepositoryInterface};
 use Lemric\BatchProcessing\Step\{RepeatStatus, TaskletInterface};
 use PHPUnit\Framework\TestCase;
-
 use function assert;
 
 final class SimpleJobOperatorTest extends TestCase
 {
     public function testStartNextInstanceUsesIncrementer(): void
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
-        $registry = $env['registry'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
+        $registry = $env->registry;
         /** @var SimpleJobOperator $operator */
-        $operator = $env['operator'];
+        $operator = $env->operator;
 
         $registry->register('jobWithIncrementer', function () use ($repo): JobInterface {
             $job = $this->buildJob($repo, 'jobWithIncrementer');
@@ -56,10 +55,10 @@ final class SimpleJobOperatorTest extends TestCase
 
     public function testStartNextInstanceWithoutIncrementerThrows(): void
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
-        $registry = $env['registry'];
-        $operator = $env['operator'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
+        $registry = $env->registry;
+        $operator = $env->operator;
 
         $registry->register('plain', fn () => $this->buildJob($repo, 'plain'));
 
@@ -69,13 +68,13 @@ final class SimpleJobOperatorTest extends TestCase
 
     public function testStartRestartAbandonStopAndStartNextInstance(): void
     {
-        $env = BatchProcessing::inMemory();
+        $env = BatchEnvironmentBuilder::inMemory()->build();
         /** @var InMemoryJobRepository $repo */
-        $repo = $env['repository'];
+        $repo = $env->repository;
         /** @var InMemoryJobRegistry $registry */
-        $registry = $env['registry'];
+        $registry = $env->registry;
         /** @var SimpleJobOperator $operator */
-        $operator = $env['operator'];
+        $operator = $env->operator;
 
         $registry->register('demoJob', fn (): JobInterface => $this->buildJob($repo, 'demoJob'));
 
@@ -97,11 +96,11 @@ final class SimpleJobOperatorTest extends TestCase
 
     public function testStopReturnsFalseForFinishedExecution(): void
     {
-        $env = BatchProcessing::inMemory();
-        $repo = $env['repository'];
-        $registry = $env['registry'];
+        $env = BatchEnvironmentBuilder::inMemory()->build();
+        $repo = $env->repository;
+        $registry = $env->registry;
         /** @var SimpleJobOperator $operator */
-        $operator = $env['operator'];
+        $operator = $env->operator;
 
         $registry->register('once', fn () => $this->buildJob($repo, 'once'));
         $execId = $operator->start('once', new JobParameters([]));

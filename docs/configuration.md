@@ -104,17 +104,29 @@ Or use the static facade:
 use Lemric\BatchProcessing\BatchProcessing;
 
 // In-memory (testing / scripts)
-$ctx = BatchProcessing::inMemory();
+$env = BatchProcessing::inMemoryEnvironment();
 
 // Production with PDO
-$ctx = BatchProcessing::pdo($pdo, tablePrefix: 'batch_');
+$env = BatchProcessing::pdoEnvironment($pdo, tablePrefix: 'batch_');
 
 // Async via dispatcher (Messenger / Queue)
-$ctx = BatchProcessing::async(
+$env = BatchProcessing::asyncEnvironment(
     dispatcher: function (int $execId, string $jobName, JobParameters $params): void {
         $messageBus->dispatch(new RunJobMessage($execId, $jobName, $params));
     },
 );
+```
+
+For advanced wiring, use the fluent builder directly:
+
+```php
+$env = BatchProcessing::builder()
+    ->withRepository(new PdoJobRepository($pdo, 'batch_'))
+    ->withTransactionManager(new PdoTransactionManager($pdo))
+    ->withLauncherFactory(
+        static fn (JobRepositoryInterface $repo): JobLauncherInterface => new SimpleJobLauncher($repo),
+    )
+    ->build();
 ```
 
 Environment Variables (Laravel)

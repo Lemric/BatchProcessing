@@ -64,7 +64,11 @@ Building a Tasklet Step
 -----------------------
 
 ```php
-$step = $ctx['stepBuilderFactory']->get('cleanupStep')
+use Lemric\BatchProcessing\BatchProcessing;
+
+$env = BatchProcessing::inMemoryEnvironment();
+
+$step = $env->stepBuilderFactory->get('cleanupStep')
     ->tasklet(new PurgeOldRecordsTasklet($pdo, daysToKeep: 90))
     ->build();
 ```
@@ -78,8 +82,11 @@ directory, environment, signal handling when `ext-pcntl` is loaded, etc.).
 
 ```php
 use Lemric\BatchProcessing\Step\SystemCommandTasklet;
+use Lemric\BatchProcessing\BatchProcessing;
 
-$step = $ctx['stepBuilderFactory']->get('compressStep')
+$env = BatchProcessing::inMemoryEnvironment();
+
+$step = $env->stepBuilderFactory->get('compressStep')
     ->tasklet(new SystemCommandTasklet('gzip /var/data/export.csv'))
     ->build();
 ```

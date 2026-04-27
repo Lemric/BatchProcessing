@@ -35,7 +35,11 @@ Reads items in batches (`chunkSize`), processes each item, then writes the entir
 chunk in a single transaction.
 
 ```php
-$step = $ctx['stepBuilderFactory']->get('importStep')
+use Lemric\BatchProcessing\BatchProcessing;
+
+$env = BatchProcessing::inMemoryEnvironment();
+
+$step = $env->stepBuilderFactory->get('importStep')
     ->chunk(
         chunkSize: 500,
         reader: $csvReader,
@@ -67,7 +71,7 @@ $tasklet = new class implements TaskletInterface {
     }
 };
 
-$step = $ctx['stepBuilderFactory']->get('cleanupStep')
+$step = $env->stepBuilderFactory->get('cleanupStep')
     ->tasklet($tasklet)
     ->build();
 ```

@@ -113,7 +113,7 @@ Async Job Launcher
 Use `AsyncJobLauncher` to dispatch jobs to a queue:
 
 ```php
-$ctx = BatchProcessing::async(
+$env = BatchProcessing::asyncEnvironment(
     dispatcher: function (int $execId, string $jobName, JobParameters $params): void {
         $messageBus->dispatch(new RunJobMessage($execId, $jobName, $params));
     },

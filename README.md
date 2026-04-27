@@ -41,17 +41,17 @@ use Lemric\BatchProcessing\Domain\JobParameters;
 use Lemric\BatchProcessing\Item\Reader\IteratorItemReader;
 use Lemric\BatchProcessing\Testing\InMemoryItemWriter;
 
-$ctx    = BatchProcessing::inMemory();
+$env    = BatchProcessing::inMemoryEnvironment();
 $reader = new IteratorItemReader(range(1, 1000));
 $writer = new InMemoryItemWriter();
 
-$step = $ctx['stepBuilderFactory']->get('demoStep')
+$step = $env->stepBuilderFactory->get('demoStep')
     ->chunk(100, $reader, null, $writer)
     ->build();
 
-$job = $ctx['jobBuilderFactory']->get('demoJob')->start($step)->build();
+$job = $env->jobBuilderFactory->get('demoJob')->start($step)->build();
 
-$execution = $ctx['launcher']->run($job, JobParameters::of(['run.id' => 1]));
+$execution = $env->launcher->run($job, JobParameters::of(['run.id' => 1]));
 
 echo $execution->getStatus()->value; // COMPLETED
 ```

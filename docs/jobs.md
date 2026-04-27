@@ -130,8 +130,11 @@ Launching Jobs
 
 ```php
 use Lemric\BatchProcessing\Domain\JobParameters;
+use Lemric\BatchProcessing\BatchProcessing;
 
-$execution = $ctx['launcher']->run(
+$env = BatchProcessing::inMemoryEnvironment();
+
+$execution = $env->launcher->run(
     $job,
     JobParameters::of(['run.id' => 1, 'source' => '/data/file.csv'])
 );
